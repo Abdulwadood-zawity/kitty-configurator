@@ -1,4 +1,4 @@
-import type { ConfLine, ParsedConf } from './parser.js';
+import type { ConfLine, ParsedConf } from './parser';
 
 function quote(s: string): string {
   if (s.length === 0) return '""';

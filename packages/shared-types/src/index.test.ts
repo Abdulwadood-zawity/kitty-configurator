@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { kittyConfigSchema, DEFAULT_CONFIG } from './index.js';
+import { kittyConfigSchema, DEFAULT_CONFIG } from './index';
 
 describe('shared-types', () => {
   it('accepts the default config', () => {

@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { themeSchema } from './theme.js';
-import { fontSettingsSchema } from './font.js';
-import { keybindingSchema } from './keybinding.js';
-import { windowSettingsSchema, tabSettingsSchema, layoutSettingsSchema } from './window.js';
-import { mouseSettingsSchema, scrollbackSettingsSchema, performanceSettingsSchema } from './advanced.js';
+import { themeSchema } from './theme';
+import { fontSettingsSchema } from './font';
+import { keybindingSchema } from './keybinding';
+import { windowSettingsSchema, tabSettingsSchema, layoutSettingsSchema } from './window';
+import { mouseSettingsSchema, scrollbackSettingsSchema, performanceSettingsSchema } from './advanced';
 
 export const kittyConfigSchema = z
   .object({

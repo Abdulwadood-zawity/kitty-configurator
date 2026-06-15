@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseKittyConf } from './parser.js';
-import { configToConf, parsedToConfig } from './mapper.js';
+import { parseKittyConf } from './parser';
+import { configToConf, parsedToConfig } from './mapper';
 import { DEFAULT_CONFIG } from '@kitty-configurator/shared-types';
 
 describe('config mapping', () => {

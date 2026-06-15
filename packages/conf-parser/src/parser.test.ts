@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseKittyConf } from './parser.js';
-import { serializeKittyConf } from './serializer.js';
+import { parseKittyConf } from './parser';
+import { serializeKittyConf } from './serializer';
 
 describe('parseKittyConf', () => {
   it('parses blank lines', () => {

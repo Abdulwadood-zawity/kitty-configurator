@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { themes, THEME_IDS, getThemeById } from './index.js';
+import { themes, THEME_IDS, getThemeById } from './index';
 import { themeSchema } from '@kitty-configurator/shared-types';
 
 describe('presets', () => {

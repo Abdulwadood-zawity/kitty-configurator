@@ -1,4 +1,4 @@
-import type { KittyConfig } from './config.js';
+import type { KittyConfig } from './config';
 
 export const DEFAULT_CONFIG: KittyConfig = {
   theme: {

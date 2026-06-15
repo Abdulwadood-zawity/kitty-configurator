@@ -1,7 +1,7 @@
 import type { KittyConfig } from '@kitty-configurator/shared-types';
 import { DEFAULT_CONFIG } from '@kitty-configurator/shared-types';
-import type { ParsedConf, ConfLine } from './parser.js';
-import { serializeKittyConf as serializeLines } from './serializer.js';
+import type { ParsedConf, ConfLine } from './parser';
+import { serializeKittyConf as serializeLines } from './serializer';
 
 const KNOWN_TOP_LEVEL_KEYS = new Set([
   'background',

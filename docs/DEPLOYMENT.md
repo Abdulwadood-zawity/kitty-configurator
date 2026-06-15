@@ -1,11 +1,23 @@
 # Deployment
 
-## Vercel
+This project ships in three places: the **web app** (Vercel), the **CLI** (npm), and the **source** (GitHub).
 
-The web app at `apps/web` is configured for static export and is intended to be
-deployed to Vercel.
+## Status
 
-**Setup steps (one-time, by hand):**
+| Component | State |
+| --- | --- |
+| GitHub repo | `https://github.com/Abdulwadood-zawity/kitty-configurator` (ready) |
+| Web app on Vercel | _set up manually via browser_ |
+| CLI on npm | _publish manually with `npm login && npm publish`_ |
+| v0.1.0 release | _tag manually_ |
+
+---
+
+## Web app (Vercel)
+
+The web app at `apps/web` is configured for static export.
+
+**One-time setup (requires a browser, do it from a logged-in browser):**
 
 1. Visit https://vercel.com/new
 2. Import the `Abdulwadood-zawity/kitty-configurator` repository
@@ -13,16 +25,16 @@ deployed to Vercel.
 4. **Build Command**: `pnpm build` (or accept default)
 5. **Output Directory**: `out` (Next.js `output: 'export'`)
 6. **Install Command**: `pnpm install --frozen-lockfile`
-7. Click Deploy
+7. **Environment**: `NODE_ENV=production`
+8. Click Deploy
 
-**Production URL:** _to be filled in after first deploy_
+Once deployed, the production URL will be something like `https://kitty-configurator.vercel.app`. Update the README and the homepage link in `apps/web/src/app/page.tsx` once you have the URL.
 
-## npm
+## CLI (npm)
 
-The CLI is published to npm as `kitty-configurator` so users can run
-`npx kitty-configurator install <url>`.
+The CLI is published to npm as `kitty-configurator` so users can run `npx kitty-configurator install <url>`.
 
-**One-time setup:**
+**One-time setup (requires npm login):**
 
 ```bash
 npm login
@@ -34,4 +46,20 @@ npm login
 cd apps/cli
 pnpm build
 npm publish --access public
+```
+
+The package is already configured correctly (see `apps/cli/package.json`) — name, version, bin entry, files whitelist, engines.
+
+**Verify the install works after publishing:**
+
+```bash
+npx kitty-configurator@latest --version
+```
+
+## GitHub release
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+gh release create v0.1.0 --generate-notes
 ```

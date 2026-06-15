@@ -1,0 +1,34 @@
+import type { Theme } from '@kitty-configurator/shared-types';
+
+const theme: Theme = {
+  id: 'gruvbox-dark',
+  name: 'Gruvbox Dark',
+  author: 'Pavel Pertsev',
+  sourceUrl: 'https://github.com/morhetz/gruvbox',
+  foreground: '#ebdbb2',
+  background: '#282828',
+  cursor: '#ebdbb2',
+  cursorTextColor: '#282828',
+  selectionBackground: '#504945',
+  selectionForeground: '#ebdbb2',
+  palette: {
+    color0: '#282828',
+    color1: '#cc241d',
+    color2: '#98971a',
+    color3: '#d79921',
+    color4: '#458588',
+    color5: '#b16286',
+    color6: '#689d6a',
+    color7: '#a89984',
+    color8: '#928374',
+    color9: '#fb4934',
+    color10: '#b8bb26',
+    color11: '#fabd2f',
+    color12: '#83a598',
+    color13: '#d3869b',
+    color14: '#8ec07c',
+    color15: '#ebdbb2',
+  },
+};
+
+export default theme;

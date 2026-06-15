@@ -1,0 +1,34 @@
+import type { Theme } from '@kitty-configurator/shared-types';
+
+const theme: Theme = {
+  id: 'rose-pine',
+  name: 'Rosé Pine',
+  author: 'Rosé Pine',
+  sourceUrl: 'https://github.com/rose-pine/rose-pine-theme',
+  foreground: '#e0def4',
+  background: '#191724',
+  cursor: '#e0def4',
+  cursorTextColor: '#191724',
+  selectionBackground: '#3a2f4a',
+  selectionForeground: '#e0def4',
+  palette: {
+    color0: '#26233a',
+    color1: '#eb6f92',
+    color2: '#31748f',
+    color3: '#f6c177',
+    color4: '#9ccfd8',
+    color5: '#c4a7e7',
+    color6: '#ebbcba',
+    color7: '#e0def4',
+    color8: '#6e6a86',
+    color9: '#eb6f92',
+    color10: '#31748f',
+    color11: '#f6c177',
+    color12: '#9ccfd8',
+    color13: '#c4a7e7',
+    color14: '#ebbcba',
+    color15: '#e0def4',
+  },
+};
+
+export default theme;

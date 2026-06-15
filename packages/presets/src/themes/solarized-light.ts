@@ -1,0 +1,34 @@
+import type { Theme } from '@kitty-configurator/shared-types';
+
+const theme: Theme = {
+  id: 'solarized-light',
+  name: 'Solarized Light',
+  author: 'Ethan Schoonover',
+  sourceUrl: 'https://ethanschoonover.com/solarized/',
+  foreground: '#586e75',
+  background: '#fdf6e3',
+  cursor: '#586e75',
+  cursorTextColor: '#fdf6e3',
+  selectionBackground: '#eee8d5',
+  selectionForeground: '#586e75',
+  palette: {
+    color0: '#eee8d5',
+    color1: '#dc322f',
+    color2: '#859900',
+    color3: '#b58900',
+    color4: '#268bd2',
+    color5: '#d33682',
+    color6: '#2aa198',
+    color7: '#073642',
+    color8: '#fdf6e3',
+    color9: '#cb4b16',
+    color10: '#93a1a1',
+    color11: '#839496',
+    color12: '#657b83',
+    color13: '#6c71c4',
+    color14: '#586e75',
+    color15: '#002b36',
+  },
+};
+
+export default theme;

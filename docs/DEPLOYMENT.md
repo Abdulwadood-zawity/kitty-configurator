@@ -23,16 +23,21 @@ The web app at `apps/web` is configured for static export.
 2. Import the `Abdulwadood-zawity/kitty-configurator` repository
 3. **Root Directory**: `apps/web`
 4. **Build Command**: `pnpm build` (or accept default)
-5. **Output Directory**: `out` (Next.js `output: 'export'`)
+5. **Output Directory**: leave as the Next.js default (`.next`) — do NOT set `out`
 6. **Install Command**: `pnpm install --frozen-lockfile`
-7. **Environment**: `NODE_ENV=production`
-8. Click Deploy
+7. Click Deploy
 
-> **Note**: A `vercel.json` is committed in `apps/web/` that sets
-> `outputDirectory: "out"`, so Vercel finds the static export correctly.
-> Without this, Vercel's default is to look for `.next/routes-manifest.json`
-> (the serverless artifact) and the deploy will fail with
-> "The file ... routes-manifest.json couldn't be found".
+> **How the build target is chosen**: `next.config.mjs` only enables
+> `output: 'export'` when NOT running on Vercel (it checks the `VERCEL` env
+> var). On Vercel the app deploys as a native Next.js app (producing `.next/`),
+> which is what Vercel's builder expects. Locally and in CI it produces a
+> static export in `out/` for QA and static hosting. The app is 100%
+> client-rendered, so both targets are equivalent at runtime.
+
+### Static hosting (GitHub Pages, Netlify, S3, etc.)
+
+For a non-Vercel static host, run `pnpm build` locally (or in CI) and deploy
+the contents of `apps/web/out/`.
 
 Once deployed, the production URL will be something like `https://kitty-configurator.vercel.app`. Update the README and the homepage link in `apps/web/src/app/page.tsx` once you have the URL.
 

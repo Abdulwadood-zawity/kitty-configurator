@@ -28,6 +28,12 @@ The web app at `apps/web` is configured for static export.
 7. **Environment**: `NODE_ENV=production`
 8. Click Deploy
 
+> **Note**: A `vercel.json` is committed in `apps/web/` that sets
+> `outputDirectory: "out"`, so Vercel finds the static export correctly.
+> Without this, Vercel's default is to look for `.next/routes-manifest.json`
+> (the serverless artifact) and the deploy will fail with
+> "The file ... routes-manifest.json couldn't be found".
+
 Once deployed, the production URL will be something like `https://kitty-configurator.vercel.app`. Update the README and the homepage link in `apps/web/src/app/page.tsx` once you have the URL.
 
 ## CLI (npm)

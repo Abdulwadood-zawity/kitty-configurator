@@ -76,6 +76,12 @@ window_padding_width 10
     expect(reparsed.lines).toEqual(parsed.lines);
   });
 
+  it('does not quote hash-prefixed non-color tokens', () => {
+    const parsed = parseKittyConf('transparent_background_colors red@0.5 #00ff00@0.3');
+    const out = serializeKittyConf(parsed);
+    expect(out).toBe('transparent_background_colors red@0.5 #00ff00@0.3');
+  });
+
   it('round-trips random configs (fuzz)', () => {
     const sample = [
       '# top',

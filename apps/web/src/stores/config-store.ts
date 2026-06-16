@@ -22,6 +22,9 @@ interface State {
   setMouse: (m: Partial<KittyConfig['mouse']>) => void;
   setScrollback: (s: Partial<KittyConfig['scrollback']>) => void;
   setPerformance: (p: Partial<KittyConfig['performance']>) => void;
+  addCustomEntry: (entry: KittyConfig['customEntries'][number]) => void;
+  updateCustomEntry: (index: number, patch: Partial<KittyConfig['customEntries'][number]>) => void;
+  removeCustomEntry: (index: number) => void;
   addKeybinding: (kb: Keybinding) => void;
   updateKeybinding: (id: string, patch: Partial<Keybinding>) => void;
   removeKeybinding: (id: string) => void;
@@ -72,6 +75,26 @@ export const useConfigStore = create<State>()(
         set((s) => ({
           config: { ...s.config, performance: { ...s.config.performance, ...patch } },
         })),
+      addCustomEntry: (entry) =>
+        set((s) => ({
+          config: { ...s.config, customEntries: [...s.config.customEntries, entry] },
+        })),
+      updateCustomEntry: (index, patch) =>
+        set((s) => ({
+          config: {
+            ...s.config,
+            customEntries: s.config.customEntries.map((entry, i) =>
+              i === index ? { ...entry, ...patch } : entry,
+            ),
+          },
+        })),
+      removeCustomEntry: (index) =>
+        set((s) => ({
+          config: {
+            ...s.config,
+            customEntries: s.config.customEntries.filter((_, i) => i !== index),
+          },
+        })),
       addKeybinding: (kb) =>
         set((s) => ({
           config: { ...s.config, keybindings: [...s.config.keybindings, kb] },
@@ -105,18 +128,23 @@ export const useConfigStore = create<State>()(
     }),
     {
       name: 'kitty-configurator-config',
-      version: 2,
+      version: 3,
       // Older persisted configs may be missing newer fields (e.g. tab colors and
       // active_tab_font_style). Merge them with the defaults so required fields
       // are always present.
       migrate: (persisted) => {
         const state = persisted as { config?: Partial<KittyConfig> } | undefined;
         if (!state?.config) return { config: structuredClone(DEFAULT_CONFIG) } as State;
+        const window = { ...DEFAULT_CONFIG.window, ...state.config.window };
+        window.resizeStrategy = window.resizeStrategy === 'cell' ? 'cell' : 'simple';
+        const tabBar = { ...DEFAULT_CONFIG.tabBar, ...state.config.tabBar };
+        tabBar.position = tabBar.position === 'bottom' ? 'bottom' : 'top';
         return {
           config: {
             ...structuredClone(DEFAULT_CONFIG),
             ...state.config,
-            tabBar: { ...DEFAULT_CONFIG.tabBar, ...state.config.tabBar },
+            window,
+            tabBar,
           },
         } as State;
       },

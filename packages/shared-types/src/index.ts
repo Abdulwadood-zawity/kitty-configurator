@@ -5,3 +5,4 @@ export * from './window';
 export * from './advanced';
 export * from './config';
 export * from './defaults';
+export * from './kitty-options';

@@ -11,7 +11,7 @@ export const windowSettingsSchema = z
     opacity: z.number().min(0).max(1),
     blur: z.number().min(0).max(50),
     decorations: z.boolean(),
-    resizeStrategy: z.enum(['simple', 'forced', 'cell', 'python']),
+    resizeStrategy: z.enum(['simple', 'cell']),
     confirmOSWindowClose: z.boolean(),
     windowLogoPath: z.string().optional(),
   })
@@ -26,7 +26,7 @@ const tabHexColor = z
 export const tabSettingsSchema = z
   .object({
     style: z.enum(['fade', 'separator', 'slant', 'powerline', 'hidden', 'custom']),
-    position: z.enum(['top', 'bottom', 'left', 'right']),
+    position: z.enum(['top', 'bottom']),
     maxTitleLength: z.number().min(0).max(200),
     activityBell: z.boolean(),
     titleTemplate: z.string().optional(),

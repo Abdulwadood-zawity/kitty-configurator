@@ -28,21 +28,35 @@ const KNOWN_TOP_LEVEL_KEYS = new Set([
   'color15',
   'font_family',
   'font_size',
+  // Current kitty uses modify_font cell_height/cell_width for typography tweaks.
+  'modify_font',
+  // Legacy keys from earlier app exports; parse but do not re-emit.
   'line_height',
   'letter_spacing',
+  'adjust_line_height',
+  'adjust_column_width',
   'disable_ligatures',
+  'bold_font',
+  'italic_font',
+  'bold_italic_font',
+  // Legacy keys from earlier app exports; parse but do not re-emit.
   'bold_font_family',
   'italic_font_family',
   'bold_italic_font_family',
   'window_padding_width',
+  // Legacy key from earlier app exports; parse but do not re-emit.
   'window_padding_height',
   'background_opacity',
   'background_blur',
   'hide_window_decorations',
+  'resize_in_steps',
+  // Legacy key from earlier app exports; parse but do not re-emit.
   'resize_in_strategy',
   'confirm_os_window_close',
   'window_logo_path',
   'tab_bar_style',
+  'tab_bar_edge',
+  // Legacy key from earlier app exports; parse but do not re-emit.
   'tab_bar_position',
   'tab_title_max_length',
   'enable_audio_bell',
@@ -53,7 +67,9 @@ const KNOWN_TOP_LEVEL_KEYS = new Set([
   'inactive_tab_background',
   'active_tab_font_style',
   'enabled_layouts',
+  // Legacy key from earlier app exports; parse but do not re-emit.
   'active_layout_alias',
+  // Legacy key from earlier app exports; parse but do not re-emit.
   'hide_mouse_when_typing',
   'mouse_hide_wait',
   'focus_follows_mouse',
@@ -61,6 +77,7 @@ const KNOWN_TOP_LEVEL_KEYS = new Set([
   'default_pointer_shape',
   'scrollback_lines',
   'scrollback_pager',
+  // Legacy keys from earlier app exports; parse but do not re-emit.
   'scrollback_fill',
   'scrollback_in_secondary_screen',
   'repaint_delay',
@@ -105,13 +122,42 @@ function isHex(s: string | undefined): s is string {
   return !!s && /^#[0-9a-fA-F]{6}$/u.test(s);
 }
 
+function parseFiniteNumber(s: string | undefined): number | undefined {
+  if (!s) return undefined;
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function parsePercentMultiplier(s: string | undefined): number | undefined {
+  if (!s?.endsWith('%')) return undefined;
+  const n = parseFloat(s.slice(0, -1));
+  return Number.isFinite(n) ? n / 100 : undefined;
+}
+
+function formatPercentMultiplier(n: number): string {
+  const value = (n * 100).toFixed(3).replace(/\.0+$/u, '').replace(/(\.\d*?)0+$/u, '$1');
+  return `${value}%`;
+}
+
+function formatPadding(padding: KittyConfig['window']['padding']): string[] {
+  const { top, right, bottom, left } = padding;
+  if (top === right && right === bottom && bottom === left) return [String(top)];
+  if (top === bottom && right === left) return [String(top), String(right)];
+  if (right === left) return [String(top), String(right), String(bottom)];
+  return [String(top), String(right), String(bottom), String(left)];
+}
+
 export function parsedToConfig(parsed: ParsedConf): KittyConfig {
   const cfg: KittyConfig = structuredClone(DEFAULT_CONFIG);
   cfg.customEntries = [];
 
   for (const line of parsed.lines) {
-    if (line.kind === 'entry') {
-      if (!KNOWN_TOP_LEVEL_KEYS.has(line.key) && line.key !== 'map') {
+    if (line.kind === 'include') {
+      cfg.customEntries.push({ key: 'include', values: [line.path] });
+    } else if (line.kind === 'entry') {
+      if (line.key === 'modify_font' && line.values[0] !== 'cell_height' && line.values[0] !== 'cell_width') {
+        cfg.customEntries.push({ key: line.key, values: line.values });
+      } else if (!KNOWN_TOP_LEVEL_KEYS.has(line.key) && line.key !== 'map') {
         cfg.customEntries.push({ key: line.key, values: line.values });
       }
     }
@@ -142,27 +188,52 @@ export function parsedToConfig(parsed: ParsedConf): KittyConfig {
   if (family) cfg.font.family = family;
   const size = getFirstValue(parsed, 'font_size');
   if (size) cfg.font.size = parseFloat(size) || cfg.font.size;
-  const lh = getFirstValue(parsed, 'line_height');
+  for (const values of getEntries(parsed, 'modify_font')) {
+    const [kind, value] = values;
+    if (kind === 'cell_height') {
+      const n = parsePercentMultiplier(value);
+      if (n) cfg.font.lineHeight = n;
+    }
+    if (kind === 'cell_width') {
+      const n = parseFiniteNumber(value);
+      if (n !== undefined) cfg.font.letterSpacing = n;
+    }
+  }
+  const lh = getFirstValue(parsed, 'line_height') ?? getFirstValue(parsed, 'adjust_line_height');
   if (lh) cfg.font.lineHeight = parseFloat(lh) || cfg.font.lineHeight;
-  const ls = getFirstValue(parsed, 'letter_spacing');
+  const ls = getFirstValue(parsed, 'letter_spacing') ?? getFirstValue(parsed, 'adjust_column_width');
   if (ls) cfg.font.letterSpacing = parseFloat(ls) || cfg.font.letterSpacing;
   const disLig = getFirstValue(parsed, 'disable_ligatures');
-  if (disLig === 'yes') cfg.font.disableLigatures = true;
-  if (disLig === 'no') cfg.font.disableLigatures = false;
-  const bff = getFirstValueJoined(parsed, 'bold_font_family');
+  if (disLig === 'yes' || disLig === 'always' || disLig === 'cursor') cfg.font.disableLigatures = true;
+  if (disLig === 'no' || disLig === 'never') cfg.font.disableLigatures = false;
+  const bff = getFirstValueJoined(parsed, 'bold_font') ?? getFirstValueJoined(parsed, 'bold_font_family');
   if (bff) cfg.font.boldFontFamily = bff;
-  const iff = getFirstValueJoined(parsed, 'italic_font_family');
+  const iff = getFirstValueJoined(parsed, 'italic_font') ?? getFirstValueJoined(parsed, 'italic_font_family');
   if (iff) cfg.font.italicFontFamily = iff;
-  const biff = getFirstValueJoined(parsed, 'bold_italic_font_family');
+  const biff = getFirstValueJoined(parsed, 'bold_italic_font') ?? getFirstValueJoined(parsed, 'bold_italic_font_family');
   if (biff) cfg.font.boldItalicFontFamily = biff;
 
-  const padW = getFirstValue(parsed, 'window_padding_width');
+  const padValues = getEntries(parsed, 'window_padding_width')[0];
   const padH = getFirstValue(parsed, 'window_padding_height');
-  if (padW) {
-    const n = parseFloat(padW);
-    if (Number.isFinite(n)) {
-      cfg.window.padding.left = n;
-      cfg.window.padding.right = n;
+  if (padValues?.length) {
+    const nums = padValues.map(parseFloat).filter(Number.isFinite);
+    if (nums.length === 1) {
+      cfg.window.padding = { top: nums[0]!, right: nums[0]!, bottom: nums[0]!, left: nums[0]! };
+    } else if (nums.length === 2) {
+      cfg.window.padding.top = nums[0]!;
+      cfg.window.padding.bottom = nums[0]!;
+      cfg.window.padding.right = nums[1]!;
+      cfg.window.padding.left = nums[1]!;
+    } else if (nums.length === 3) {
+      cfg.window.padding.top = nums[0]!;
+      cfg.window.padding.right = nums[1]!;
+      cfg.window.padding.left = nums[1]!;
+      cfg.window.padding.bottom = nums[2]!;
+    } else if (nums.length >= 4) {
+      cfg.window.padding.top = nums[0]!;
+      cfg.window.padding.right = nums[1]!;
+      cfg.window.padding.bottom = nums[2]!;
+      cfg.window.padding.left = nums[3]!;
     }
   }
   if (padH) {
@@ -179,13 +250,15 @@ export function parsedToConfig(parsed: ParsedConf): KittyConfig {
   const dec = getFirstValue(parsed, 'hide_window_decorations');
   if (dec === 'yes') cfg.window.decorations = false;
   if (dec === 'no') cfg.window.decorations = true;
+  const ris = getFirstValue(parsed, 'resize_in_steps');
+  if (ris === 'yes') cfg.window.resizeStrategy = 'cell';
+  if (ris === 'no') cfg.window.resizeStrategy = 'simple';
   const rs = getFirstValue(parsed, 'resize_in_strategy');
-  if (rs === 'simple' || rs === 'forced' || rs === 'cell' || rs === 'python') {
+  if (rs === 'simple' || rs === 'cell') {
     cfg.window.resizeStrategy = rs;
   }
   const cwc = getFirstValue(parsed, 'confirm_os_window_close');
-  if (cwc === 'yes') cfg.window.confirmOSWindowClose = true;
-  if (cwc === 'no') cfg.window.confirmOSWindowClose = false;
+  if (cwc) cfg.window.confirmOSWindowClose = parseInt(cwc, 10) !== 0;
   const wlp = getFirstValueJoined(parsed, 'window_logo_path');
   if (wlp) cfg.window.windowLogoPath = wlp;
 
@@ -193,8 +266,8 @@ export function parsedToConfig(parsed: ParsedConf): KittyConfig {
   if (tbs === 'fade' || tbs === 'separator' || tbs === 'slant' || tbs === 'powerline' || tbs === 'hidden' || tbs === 'custom') {
     cfg.tabBar.style = tbs;
   }
-  const tbp = getFirstValue(parsed, 'tab_bar_position');
-  if (tbp === 'top' || tbp === 'bottom' || tbp === 'left' || tbp === 'right') {
+  const tbp = getFirstValue(parsed, 'tab_bar_edge') ?? getFirstValue(parsed, 'tab_bar_position');
+  if (tbp === 'top' || tbp === 'bottom') {
     cfg.tabBar.position = tbp;
   }
   const ttml = getFirstValue(parsed, 'tab_title_max_length');
@@ -219,7 +292,7 @@ export function parsedToConfig(parsed: ParsedConf): KittyConfig {
 
   const layouts = getEntries(parsed, 'enabled_layouts');
   if (layouts.length > 0) {
-    const names = layouts[0]!;
+    const names = layouts[0]!.flatMap((v) => v.split(',').map((x) => x.trim())).filter(Boolean);
     cfg.layouts.enabledLayouts = names.filter(
       (n): n is 'tall' | 'fat' | 'grid' | 'horizontal' | 'vertical' | 'stack' | 'splits' =>
         n === 'tall' || n === 'fat' || n === 'grid' || n === 'horizontal' || n === 'vertical' || n === 'stack' || n === 'splits',
@@ -232,7 +305,13 @@ export function parsedToConfig(parsed: ParsedConf): KittyConfig {
   if (hmwt === 'yes') cfg.mouse.hideMouseWhenTyping = true;
   if (hmwt === 'no') cfg.mouse.hideMouseWhenTyping = false;
   const mhw = getFirstValue(parsed, 'mouse_hide_wait');
-  if (mhw) cfg.mouse.mouseHideWait = parseFloat(mhw) || cfg.mouse.mouseHideWait;
+  if (mhw) {
+    const n = parseFloat(mhw);
+    if (Number.isFinite(n)) {
+      cfg.mouse.mouseHideWait = n;
+      cfg.mouse.hideMouseWhenTyping = n !== 0;
+    }
+  }
   const ffm = getFirstValue(parsed, 'focus_follows_mouse');
   if (ffm === 'yes') cfg.mouse.focusFollowsMouse = true;
   if (ffm === 'no') cfg.mouse.focusFollowsMouse = false;
@@ -308,27 +387,28 @@ export function configToConf(config: KittyConfig): string {
   lines.push({ kind: 'comment', text: 'Font' });
   lines.push({ kind: 'entry', key: 'font_family', values: [config.font.family] });
   lines.push({ kind: 'entry', key: 'font_size', values: [String(config.font.size)] });
-  lines.push({ kind: 'entry', key: 'line_height', values: [config.font.lineHeight % 1 === 0 ? config.font.lineHeight.toFixed(1) : String(config.font.lineHeight)] });
+  if (config.font.lineHeight !== 1) {
+    lines.push({ kind: 'entry', key: 'modify_font', values: ['cell_height', formatPercentMultiplier(config.font.lineHeight)] });
+  }
   if (config.font.letterSpacing !== 0) {
-    lines.push({ kind: 'entry', key: 'letter_spacing', values: [String(config.font.letterSpacing)] });
+    lines.push({ kind: 'entry', key: 'modify_font', values: ['cell_width', String(config.font.letterSpacing)] });
   }
   if (config.font.disableLigatures) {
-    lines.push({ kind: 'entry', key: 'disable_ligatures', values: ['yes'] });
+    lines.push({ kind: 'entry', key: 'disable_ligatures', values: ['always'] });
   }
   if (config.font.boldFontFamily) {
-    lines.push({ kind: 'entry', key: 'bold_font_family', values: [config.font.boldFontFamily] });
+    lines.push({ kind: 'entry', key: 'bold_font', values: [config.font.boldFontFamily] });
   }
   if (config.font.italicFontFamily) {
-    lines.push({ kind: 'entry', key: 'italic_font_family', values: [config.font.italicFontFamily] });
+    lines.push({ kind: 'entry', key: 'italic_font', values: [config.font.italicFontFamily] });
   }
   if (config.font.boldItalicFontFamily) {
-    lines.push({ kind: 'entry', key: 'bold_italic_font_family', values: [config.font.boldItalicFontFamily] });
+    lines.push({ kind: 'entry', key: 'bold_italic_font', values: [config.font.boldItalicFontFamily] });
   }
   lines.push({ kind: 'blank' });
 
   lines.push({ kind: 'comment', text: 'Window' });
-  lines.push({ kind: 'entry', key: 'window_padding_width', values: [String(config.window.padding.left)] });
-  lines.push({ kind: 'entry', key: 'window_padding_height', values: [String(config.window.padding.top)] });
+  lines.push({ kind: 'entry', key: 'window_padding_width', values: formatPadding(config.window.padding) });
   if (config.window.opacity < 1) {
     lines.push({ kind: 'entry', key: 'background_opacity', values: [String(config.window.opacity)] });
   }
@@ -338,11 +418,11 @@ export function configToConf(config: KittyConfig): string {
   if (!config.window.decorations) {
     lines.push({ kind: 'entry', key: 'hide_window_decorations', values: ['yes'] });
   }
-  if (config.window.resizeStrategy !== 'simple') {
-    lines.push({ kind: 'entry', key: 'resize_in_strategy', values: [config.window.resizeStrategy] });
+  if (config.window.resizeStrategy === 'cell') {
+    lines.push({ kind: 'entry', key: 'resize_in_steps', values: ['yes'] });
   }
   if (!config.window.confirmOSWindowClose) {
-    lines.push({ kind: 'entry', key: 'confirm_os_window_close', values: ['no'] });
+    lines.push({ kind: 'entry', key: 'confirm_os_window_close', values: ['0'] });
   }
   if (config.window.windowLogoPath) {
     lines.push({ kind: 'entry', key: 'window_logo_path', values: [config.window.windowLogoPath] });
@@ -351,7 +431,7 @@ export function configToConf(config: KittyConfig): string {
 
   lines.push({ kind: 'comment', text: 'Tab bar' });
   lines.push({ kind: 'entry', key: 'tab_bar_style', values: [config.tabBar.style] });
-  lines.push({ kind: 'entry', key: 'tab_bar_position', values: [config.tabBar.position] });
+  lines.push({ kind: 'entry', key: 'tab_bar_edge', values: [config.tabBar.position === 'bottom' ? 'bottom' : 'top'] });
   lines.push({ kind: 'entry', key: 'tab_title_max_length', values: [String(config.tabBar.maxTitleLength)] });
   if (!config.tabBar.activityBell) {
     lines.push({ kind: 'entry', key: 'enable_audio_bell', values: ['no'] });
@@ -377,17 +457,14 @@ export function configToConf(config: KittyConfig): string {
   lines.push({ kind: 'blank' });
 
   lines.push({ kind: 'comment', text: 'Layouts' });
-  lines.push({ kind: 'entry', key: 'enabled_layouts', values: [...config.layouts.enabledLayouts] });
-  if (config.layouts.activeLayoutAlias) {
-    lines.push({ kind: 'entry', key: 'active_layout_alias', values: [config.layouts.activeLayoutAlias] });
-  }
+  lines.push({ kind: 'entry', key: 'enabled_layouts', values: [config.layouts.enabledLayouts.join(',')] });
   lines.push({ kind: 'blank' });
 
   const mouseEntries: ConfLine[] = [];
   if (!config.mouse.hideMouseWhenTyping) {
-    mouseEntries.push({ kind: 'entry', key: 'hide_mouse_when_typing', values: ['no'] });
+    mouseEntries.push({ kind: 'entry', key: 'mouse_hide_wait', values: ['0'] });
   }
-  if (config.mouse.mouseHideWait !== 3) {
+  if (config.mouse.hideMouseWhenTyping && config.mouse.mouseHideWait !== 3) {
     mouseEntries.push({ kind: 'entry', key: 'mouse_hide_wait', values: [String(config.mouse.mouseHideWait)] });
   }
   if (config.mouse.focusFollowsMouse) {
@@ -411,12 +488,6 @@ export function configToConf(config: KittyConfig): string {
   }
   if (config.scrollback.pager) {
     scrollbackEntries.push({ kind: 'entry', key: 'scrollback_pager', values: [config.scrollback.pager] });
-  }
-  if (config.scrollback.fillEnum !== 'default') {
-    scrollbackEntries.push({ kind: 'entry', key: 'scrollback_fill', values: [config.scrollback.fillEnum] });
-  }
-  if (config.scrollback.inSecondaryScreen) {
-    scrollbackEntries.push({ kind: 'entry', key: 'scrollback_in_secondary_screen', values: ['yes'] });
   }
   if (scrollbackEntries.length > 0) {
     lines.push({ kind: 'comment', text: 'Scrollback' });

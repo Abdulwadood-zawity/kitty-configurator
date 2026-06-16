@@ -7,6 +7,7 @@ import { ThemeSection } from '@/components/editor/theme-section';
 import { FontSection } from '@/components/editor/font-section';
 import { WindowSection } from '@/components/editor/window-section';
 import { AdvancedSection } from '@/components/editor/advanced-section';
+import { FullConfigSection } from '@/components/editor/full-config-section';
 import { KeybindingsSection } from '@/components/editor/keybindings-section';
 import { LivePreview } from '@/components/editor/live-preview';
 import { ImportControls } from '@/components/editor/import-controls';
@@ -40,6 +41,7 @@ export function EditorClient() {
                 <TabsTrigger value="window">Window &amp; Tabs</TabsTrigger>
                 <TabsTrigger value="keybindings">Keybindings</TabsTrigger>
                 <TabsTrigger value="advanced">Mouse &amp; Scroll</TabsTrigger>
+                <TabsTrigger value="full">Full Config</TabsTrigger>
               </TabsList>
             </div>
 
@@ -59,6 +61,9 @@ export function EditorClient() {
               </TabsContent>
               <TabsContent value="advanced" className="mt-0">
                 <AdvancedSection />
+              </TabsContent>
+              <TabsContent value="full" className="mt-0">
+                <FullConfigSection />
               </TabsContent>
             </div>
           </Tabs>

@@ -35,7 +35,9 @@ describe('config mapping', () => {
     expect(text).not.toContain('foreground "#cdd6f4"');
     expect(text).toContain('font_family "JetBrains Mono"');
     expect(text).not.toContain('font_family "\\"JetBrains Mono\\""');
-    expect(text).toContain('line_height 1.0');
+    expect(text).not.toContain('line_height');
+    expect(text).toContain('tab_bar_edge top');
+    expect(text).toContain('enabled_layouts tall,fat,grid,splits');
     expect(text).not.toContain('# Mouse\n\n');
     expect(text).not.toContain('# Scrollback\n\n');
     expect(text).not.toContain('# Performance\n\n');
@@ -51,9 +53,9 @@ foreground #012345
 cursor #fedcba
 font_size 16
 font_family "Fira Code"
-line_height 1.2
+modify_font cell_height 120%
 window_padding_width 24
-enabled_layouts tall grid splits
+enabled_layouts tall,grid,splits
 map ctrl+shift+c copy_to_clipboard
 map ctrl+shift+v paste_from_clipboard
 `;
@@ -124,7 +126,6 @@ enable_audio_bell no
 #: Window layout {{{
 
 window_padding_width 12
-window_padding_height 12
 remember_window_size  yes
 initial_window_width  640
 initial_window_height 400
@@ -134,7 +135,7 @@ initial_window_height 400
 #: Tab bar {{{
 
 tab_bar_style powerline
-tab_bar_position top
+tab_bar_edge top
 tab_title_max_length  40
 tab_activity_symbol \u2592
 #: }}}
@@ -180,5 +181,69 @@ tab_activity_symbol \u2592
     expect(b.tabBar.activeBackground).toBe(a.tabBar.activeBackground);
     expect(b.tabBar.inactiveForeground).toBe(a.tabBar.inactiveForeground);
     expect(b.tabBar.activeFontStyle).toBe('italic');
+  });
+
+  it('serializes non-default fields using current kitty option names', () => {
+    const cfg = structuredClone(DEFAULT_CONFIG);
+    cfg.font.lineHeight = 1.25;
+    cfg.font.letterSpacing = 1.5;
+    cfg.font.disableLigatures = true;
+    cfg.font.boldFontFamily = 'JetBrains Mono Bold';
+    cfg.font.italicFontFamily = 'JetBrains Mono Italic';
+    cfg.font.boldItalicFontFamily = 'JetBrains Mono Bold Italic';
+    cfg.window.padding = { top: 8, right: 12, bottom: 10, left: 14 };
+    cfg.window.resizeStrategy = 'cell';
+    cfg.window.confirmOSWindowClose = false;
+    cfg.tabBar.position = 'bottom';
+    cfg.layouts.enabledLayouts = ['tall', 'grid', 'splits'];
+    cfg.mouse.hideMouseWhenTyping = false;
+    cfg.scrollback.fillEnum = 'filled';
+    cfg.scrollback.inSecondaryScreen = true;
+
+    const out = configToConf(cfg);
+    expect(out).toContain('modify_font cell_height 125%');
+    expect(out).toContain('modify_font cell_width 1.5');
+    expect(out).toContain('disable_ligatures always');
+    expect(out).toContain('bold_font "JetBrains Mono Bold"');
+    expect(out).toContain('italic_font "JetBrains Mono Italic"');
+    expect(out).toContain('bold_italic_font "JetBrains Mono Bold Italic"');
+    expect(out).toContain('window_padding_width 8 12 10 14');
+    expect(out).toContain('resize_in_steps yes');
+    expect(out).toContain('confirm_os_window_close 0');
+    expect(out).toContain('tab_bar_edge bottom');
+    expect(out).toContain('enabled_layouts tall,grid,splits');
+    expect(out).toContain('mouse_hide_wait 0');
+    expect(out).not.toContain('line_height');
+    expect(out).not.toContain('letter_spacing');
+    expect(out).not.toContain('bold_font_family');
+    expect(out).not.toContain('window_padding_height');
+    expect(out).not.toContain('resize_in_strategy');
+    expect(out).not.toContain('tab_bar_position');
+    expect(out).not.toContain('active_layout_alias');
+    expect(out).not.toContain('hide_mouse_when_typing');
+    expect(out).not.toContain('scrollback_fill');
+    expect(out).not.toContain('scrollback_in_secondary_screen');
+  });
+
+  it('preserves and emits full-config advanced entries', () => {
+    const input = [
+      'include themes/catppuccin.conf',
+      'cursor_shape beam',
+      'symbol_map U+E0A0-U+E0A3 Symbols Nerd Font Mono',
+      'mouse_map left press ungrabbed mouse_select_command_output',
+    ].join('\n');
+    const cfg = parsedToConfig(parseKittyConf(input));
+    expect(cfg.customEntries).toEqual([
+      { key: 'include', values: ['themes/catppuccin.conf'] },
+      { key: 'cursor_shape', values: ['beam'] },
+      { key: 'symbol_map', values: ['U+E0A0-U+E0A3', 'Symbols', 'Nerd', 'Font', 'Mono'] },
+      { key: 'mouse_map', values: ['left', 'press', 'ungrabbed', 'mouse_select_command_output'] },
+    ]);
+
+    const out = configToConf(cfg);
+    expect(out).toContain('include themes/catppuccin.conf');
+    expect(out).toContain('cursor_shape beam');
+    expect(out).toContain('symbol_map U+E0A0-U+E0A3 Symbols Nerd Font Mono');
+    expect(out).toContain('mouse_map left press ungrabbed mouse_select_command_output');
   });
 });

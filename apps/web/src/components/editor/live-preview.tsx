@@ -39,7 +39,7 @@ export function LivePreview() {
   const activeLayout: LayoutName = enabled.includes(layout) ? layout : (enabled[0] ?? 'tall');
 
   const tabBarVisible = tab.style !== 'hidden';
-  const tabBarOnTop = tab.position === 'top' || tab.position === 'left';
+  const tabBarOnTop = tab.position === 'top';
 
   // Whether the window is translucent/blurred (so the terminal + chrome render
   // on the glass instead of an opaque background).

@@ -92,22 +92,16 @@ export function WindowSection() {
               onCheckedChange={(v) => setWindow({ decorations: v })}
             />
           </div>
-          <div className="space-y-2">
-            <Label>Resize strategy</Label>
-            <Select
-              value={w.resizeStrategy}
-              onValueChange={(v) => setWindow({ resizeStrategy: v as typeof w.resizeStrategy })}
-            >
-              <SelectTrigger data-testid="resize-strategy">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="simple">simple</SelectItem>
-                <SelectItem value="forced">forced</SelectItem>
-                <SelectItem value="cell">cell</SelectItem>
-                <SelectItem value="python">python</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <Label>Resize in cell steps</Label>
+              <p className="text-xs text-muted-foreground">Emit kitty&apos;s resize_in_steps option.</p>
+            </div>
+            <Switch
+              data-testid="resize-in-steps"
+              checked={w.resizeStrategy === 'cell'}
+              onCheckedChange={(v) => setWindow({ resizeStrategy: v ? 'cell' : 'simple' })}
+            />
           </div>
         </CardContent>
       </Card>
@@ -150,8 +144,6 @@ export function WindowSection() {
                 <SelectContent>
                   <SelectItem value="top">top</SelectItem>
                   <SelectItem value="bottom">bottom</SelectItem>
-                  <SelectItem value="left">left</SelectItem>
-                  <SelectItem value="right">right</SelectItem>
                 </SelectContent>
               </Select>
             </div>

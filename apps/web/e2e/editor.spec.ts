@@ -7,13 +7,14 @@ test.describe('Kitty Configurator', () => {
     await expect(page.getByRole('link', { name: 'Open Editor' })).toBeVisible();
   });
 
-  test('editor loads all 5 tabs and at least 24 preset themes', async ({ page }) => {
+  test('editor loads all 6 tabs and at least 24 preset themes', async ({ page }) => {
     await page.goto('/editor');
     await expect(page.getByRole('tab', { name: 'Theme' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Font' })).toBeVisible();
     await expect(page.getByRole('tab', { name: /Window/ })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Keybindings' })).toBeVisible();
     await expect(page.getByRole('tab', { name: /Mouse/ })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Full Config' })).toBeVisible();
     const themeButtons = page.locator('[data-testid^="theme-"]');
     await expect(themeButtons).toHaveCount(24);
   });
@@ -83,7 +84,28 @@ test.describe('Kitty Configurator', () => {
     expect(text).not.toContain('foreground "#cdd6f4"');
     expect(text).toContain('font_family "JetBrains Mono"');
     expect(text).not.toContain('font_family "\\"JetBrains Mono\\""');
-    expect(text).toContain('line_height 1.0');
+    expect(text).not.toContain('line_height');
+    expect(text).toContain('tab_bar_edge top');
+    expect(text).toContain('enabled_layouts tall,fat,grid,splits');
+  });
+
+  test('full config tab exports advanced kitty options', async ({ page }) => {
+    await page.goto('/editor');
+    await page.getByRole('tab', { name: 'Full Config' }).click();
+    await page.getByTestId('full-option-key').fill('cursor_shape');
+    await page.getByTestId('full-option-value').fill('beam');
+    await page.getByTestId('add-full-option').click();
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByTestId('export-button').click();
+    const download = await downloadPromise;
+    const stream = await download.createReadStream();
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream!) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    const text = Buffer.concat(chunks).toString('utf8');
+    expect(text).toContain('cursor_shape beam');
   });
 
   test('layout mode renders multiple terminal panes', async ({ page }) => {

@@ -130,33 +130,6 @@ export function AdvancedSection() {
               onChange={(e) => setScrollback({ pager: e.target.value || undefined })}
             />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Fill</Label>
-              <Select
-                value={s.fillEnum}
-                onValueChange={(v) => setScrollback({ fillEnum: v as typeof s.fillEnum })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="default">default</SelectItem>
-                  <SelectItem value="filled">filled</SelectItem>
-                  <SelectItem value="unlimited">unlimited</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-end">
-              <div className="flex items-center justify-between w-full rounded-lg border p-3">
-                <Label>Scrollback in secondary screen</Label>
-                <Switch
-                  checked={s.inSecondaryScreen}
-                  onCheckedChange={(v) => setScrollback({ inSecondaryScreen: v })}
-                />
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
 

@@ -19,6 +19,27 @@ test.describe('Kitty Configurator', () => {
     await expect(themeButtons).toHaveCount(24);
   });
 
+  test('dragging the sidebar resizer changes the settings width', async ({ page }) => {
+    await page.goto('/editor');
+    const sidebar = page.getByTestId('settings-sidebar');
+    const resizer = page.getByTestId('sidebar-resizer');
+    const before = await sidebar.boundingBox();
+    const handle = await resizer.boundingBox();
+    expect(before).not.toBeNull();
+    expect(handle).not.toBeNull();
+
+    await page.mouse.move(handle!.x + handle!.width / 2, handle!.y + handle!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(handle!.x + handle!.width / 2 + 120, handle!.y + handle!.height / 2, {
+      steps: 5,
+    });
+    await page.mouse.up();
+
+    const after = await sidebar.boundingBox();
+    expect(after).not.toBeNull();
+    expect(after!.width).toBeGreaterThan(before!.width + 80);
+  });
+
   test('clicking a preset theme updates the live preview', async ({ page }) => {
     await page.goto('/editor');
     await page.locator('[data-testid="theme-dracula"]').click();

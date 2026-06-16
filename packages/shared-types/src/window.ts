@@ -19,6 +19,10 @@ export const windowSettingsSchema = z
 
 export type WindowSettings = z.infer<typeof windowSettingsSchema>;
 
+const tabHexColor = z
+  .string()
+  .regex(/^#[0-9a-fA-F]{6}$/u, 'expected a 6-digit hex color like #1e1e2e');
+
 export const tabSettingsSchema = z
   .object({
     style: z.enum(['fade', 'separator', 'slant', 'powerline', 'hidden', 'custom']),
@@ -26,6 +30,11 @@ export const tabSettingsSchema = z
     maxTitleLength: z.number().min(0).max(200),
     activityBell: z.boolean(),
     titleTemplate: z.string().optional(),
+    activeForeground: tabHexColor.optional(),
+    activeBackground: tabHexColor.optional(),
+    inactiveForeground: tabHexColor.optional(),
+    inactiveBackground: tabHexColor.optional(),
+    activeFontStyle: z.enum(['normal', 'bold', 'italic', 'bold-italic']),
   })
   .strict();
 

@@ -171,6 +171,71 @@ export function WindowSection() {
               onValueChange={(v) => setTabBar({ maxTitleLength: v[0] ?? t.maxTitleLength })}
             />
           </div>
+          <div className="space-y-2">
+            <Label>Tab title template</Label>
+            <Input
+              data-testid="tab-title-template"
+              value={t.titleTemplate ?? ''}
+              placeholder="{index}: {title}"
+              onChange={(e) => setTabBar({ titleTemplate: e.target.value || undefined })}
+            />
+            <p className="text-xs text-muted-foreground">
+              Use kitty placeholders like <code>{'{index}'}</code> and <code>{'{title}'}</code>.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>Active tab font style</Label>
+            <Select
+              value={t.activeFontStyle}
+              onValueChange={(v) => setTabBar({ activeFontStyle: v as typeof t.activeFontStyle })}
+            >
+              <SelectTrigger data-testid="active-tab-font-style">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="normal">normal</SelectItem>
+                <SelectItem value="bold">bold</SelectItem>
+                <SelectItem value="italic">italic</SelectItem>
+                <SelectItem value="bold-italic">bold-italic</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <div className="text-sm font-medium mb-3">Tab colors</div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Leave unset to follow the theme automatically.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <TabColorInput
+                label="Active foreground"
+                testId="active-tab-foreground"
+                value={t.activeForeground}
+                fallback={config.theme.background}
+                onChange={(v) => setTabBar({ activeForeground: v })}
+              />
+              <TabColorInput
+                label="Active background"
+                testId="active-tab-background"
+                value={t.activeBackground}
+                fallback={config.theme.palette.color4}
+                onChange={(v) => setTabBar({ activeBackground: v })}
+              />
+              <TabColorInput
+                label="Inactive foreground"
+                testId="inactive-tab-foreground"
+                value={t.inactiveForeground}
+                fallback={config.theme.foreground}
+                onChange={(v) => setTabBar({ inactiveForeground: v })}
+              />
+              <TabColorInput
+                label="Inactive background"
+                testId="inactive-tab-background"
+                value={t.inactiveBackground}
+                fallback={config.theme.palette.color0}
+                onChange={(v) => setTabBar({ inactiveBackground: v })}
+              />
+            </div>
+          </div>
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div>
               <Label>Activity bell</Label>
@@ -226,6 +291,61 @@ export function WindowSection() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+const HEX_RE = /^#[0-9a-fA-F]{6}$/u;
+
+function TabColorInput({
+  label,
+  testId,
+  value,
+  fallback,
+  onChange,
+}: {
+  label: string;
+  testId: string;
+  value: string | undefined;
+  fallback: string;
+  onChange: (v: string | undefined) => void;
+}) {
+  const display = value ?? fallback;
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <Label htmlFor={testId}>{label}</Label>
+        {value !== undefined && (
+          <button
+            type="button"
+            data-testid={`${testId}-clear`}
+            className="text-xs text-muted-foreground hover:underline"
+            onClick={() => onChange(undefined)}
+          >
+            Use theme
+          </button>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          id={testId}
+          data-testid={testId}
+          type="color"
+          value={display}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-9 w-12 rounded border border-input cursor-pointer"
+        />
+        <Input
+          value={value ?? ''}
+          placeholder={`${fallback} (theme)`}
+          onChange={(e) => {
+            const val = e.target.value.trim();
+            if (val === '') onChange(undefined);
+            else if (HEX_RE.test(val)) onChange(val);
+          }}
+          className="font-mono text-xs"
+        />
+      </div>
     </div>
   );
 }

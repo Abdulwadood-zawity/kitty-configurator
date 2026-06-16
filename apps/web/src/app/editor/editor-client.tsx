@@ -14,27 +14,26 @@ import { ApplyBar } from '@/components/editor/apply-bar';
 
 export function EditorClient() {
   return (
-    <>
-      <main className="container py-6 pb-24">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <Link
-              href="/"
-              className="text-sm text-muted-foreground hover:underline"
-            >
-              ← Home
-            </Link>
-            <h1 className="text-3xl font-bold tracking-tight">Editor</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <ImportControls />
-            <ThemeToggle />
-          </div>
+    <div className="flex h-screen flex-col overflow-hidden">
+      {/* Top bar */}
+      <header className="flex shrink-0 items-center justify-between border-b px-4 py-3">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="text-sm text-muted-foreground hover:underline">
+            ← Home
+          </Link>
+          <h1 className="text-xl font-bold tracking-tight">Editor</h1>
         </div>
+        <div className="flex items-center gap-3">
+          <ImportControls />
+          <ThemeToggle />
+        </div>
+      </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
-          <div>
-            <Tabs defaultValue="theme">
+      {/* Body: scrollable settings sidebar + full-screen live preview */}
+      <div className="flex min-h-0 flex-1">
+        <aside className="flex w-full max-w-md shrink-0 flex-col border-r lg:w-[420px]">
+          <Tabs defaultValue="theme" className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 overflow-x-auto border-b px-4 py-3">
               <TabsList>
                 <TabsTrigger value="theme">Theme</TabsTrigger>
                 <TabsTrigger value="font">Font</TabsTrigger>
@@ -42,29 +41,37 @@ export function EditorClient() {
                 <TabsTrigger value="keybindings">Keybindings</TabsTrigger>
                 <TabsTrigger value="advanced">Mouse &amp; Scroll</TabsTrigger>
               </TabsList>
-              <TabsContent value="theme" className="mt-4">
+            </div>
+
+            {/* Only this region scrolls */}
+            <div className="min-h-0 flex-1 overflow-y-auto p-4" data-testid="settings-scroll">
+              <TabsContent value="theme" className="mt-0">
                 <ThemeSection />
               </TabsContent>
-              <TabsContent value="font" className="mt-4">
+              <TabsContent value="font" className="mt-0">
                 <FontSection />
               </TabsContent>
-              <TabsContent value="window" className="mt-4">
+              <TabsContent value="window" className="mt-0">
                 <WindowSection />
               </TabsContent>
-              <TabsContent value="keybindings" className="mt-4">
+              <TabsContent value="keybindings" className="mt-0">
                 <KeybindingsSection />
               </TabsContent>
-              <TabsContent value="advanced" className="mt-4">
+              <TabsContent value="advanced" className="mt-0">
                 <AdvancedSection />
               </TabsContent>
-            </Tabs>
-          </div>
-          <div>
-            <LivePreview />
-          </div>
-        </div>
-      </main>
-      <ApplyBar />
-    </>
+            </div>
+          </Tabs>
+
+          {/* Export / Apply actions pinned to the sidebar bottom */}
+          <ApplyBar />
+        </aside>
+
+        {/* Full-screen live preview */}
+        <section className="hidden min-w-0 flex-1 lg:block">
+          <LivePreview />
+        </section>
+      </div>
+    </div>
   );
 }

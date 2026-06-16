@@ -84,7 +84,7 @@ export function ThemeSection() {
           <CardDescription>Pick a curated theme, then customize colors below.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {PRESET_THEMES.map((t) => (
               <button
                 key={t.id}
@@ -96,7 +96,7 @@ export function ThemeSection() {
                 }`}
               >
                 <div
-                  className="h-16 rounded mb-2 font-mono text-xs p-2 leading-tight"
+                  className="h-16 overflow-hidden rounded mb-2 font-mono text-xs p-2 leading-tight"
                   style={{ background: t.background, color: t.foreground }}
                   aria-hidden
                 >
@@ -104,7 +104,7 @@ export function ThemeSection() {
                   <div style={{ color: t.palette.color4 }}>function fn() {'{}'}</div>
                   <div style={{ color: t.palette.color5 }}>return [1, 2];</div>
                 </div>
-                <div className="text-sm font-medium">{t.name}</div>
+                <div className="truncate text-sm font-medium">{t.name}</div>
                 <div className="flex gap-1 mt-1">
                   {[t.palette.color1, t.palette.color2, t.palette.color3, t.palette.color4, t.palette.color5, t.palette.color6].map(
                     (c, i) => (

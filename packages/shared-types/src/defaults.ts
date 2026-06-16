@@ -50,6 +50,7 @@ export const DEFAULT_CONFIG: KittyConfig = {
     position: 'top',
     maxTitleLength: 100,
     activityBell: true,
+    activeFontStyle: 'bold',
   },
   layouts: {
     enabledLayouts: ['tall', 'fat', 'grid', 'splits'],

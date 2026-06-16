@@ -21,23 +21,27 @@ test.describe('Kitty Configurator', () => {
   test('clicking a preset theme updates the live preview', async ({ page }) => {
     await page.goto('/editor');
     await page.locator('[data-testid="theme-dracula"]').click();
-    const preview = page.getByTestId('terminal-preview');
-    const bg = await preview.evaluate((el) => getComputedStyle(el).backgroundColor);
+    // At full opacity the window background is the theme's background color.
+    const win = page.getByTestId('terminal-window');
+    const bg = await win.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(bg).toBe('rgb(40, 42, 54)'); // Dracula background
   });
 
   test('changing font size updates the preview', async ({ page }) => {
     await page.goto('/editor');
     await page.getByRole('tab', { name: 'Font' }).click();
-    const preview = page.getByTestId('terminal-preview');
-    const before = await preview.evaluate((el) => getComputedStyle(el).fontSize);
+    // The live preview is a real xterm.js terminal; the rows element carries
+    // the configured font size.
+    const term = page.locator('.xterm-rows');
+    await expect(term).toBeVisible();
+    const before = await term.evaluate((el) => getComputedStyle(el).fontSize);
     // Use keyboard to change the slider
     const slider = page.getByTestId('font-size').locator('[role="slider"]');
     await slider.focus();
     for (let i = 0; i < 5; i++) {
       await page.keyboard.press('ArrowRight');
     }
-    const after = await preview.evaluate((el) => getComputedStyle(el).fontSize);
+    const after = await term.evaluate((el) => getComputedStyle(el).fontSize);
     expect(after).not.toBe(before);
   });
 
@@ -69,6 +73,46 @@ test.describe('Kitty Configurator', () => {
     await page.getByTestId('export-button').click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe('kitty.conf');
+  });
+
+  test('layout mode renders multiple terminal panes', async ({ page }) => {
+    await page.goto('/editor');
+    await page.getByTestId('preview-mode-layout').click();
+    // The layout switcher shows the enabled layouts; pick "grid" for 4 panes.
+    await page.getByTestId('layout-grid').click();
+    await expect(page.getByTestId('pane-0')).toBeVisible();
+    await expect(page.getByTestId('pane-3')).toBeVisible();
+    // Each pane is a real xterm terminal.
+    await expect(page.locator('.xterm')).toHaveCount(4);
+  });
+
+  test('lowering opacity makes the preview window translucent over a wallpaper', async ({ page }) => {
+    await page.goto('/editor');
+    await page.getByRole('tab', { name: /Window/ }).click();
+    const win = page.getByTestId('terminal-window');
+    // A desktop wallpaper sits behind the window so transparency is visible.
+    await expect(page.getByTestId('preview-desktop')).toBeVisible();
+    // Drag opacity to its minimum → the window background becomes translucent.
+    const slider = page.getByTestId('opacity').locator('[role="slider"]');
+    await slider.focus();
+    await page.keyboard.press('Home');
+    const bg = await win.evaluate((el) => getComputedStyle(el).backgroundColor);
+    // Translucent backgrounds are reported as rgba(...) with alpha < 1.
+    expect(bg).toMatch(/rgba\([^)]+,\s*0?\.\d+\)/);
+    await expect(page.getByTestId('transparency-hint')).toBeVisible();
+  });
+
+  test('customizing the active tab font style updates the preview tab', async ({ page }) => {
+    await page.goto('/editor');
+    await page.getByRole('tab', { name: /Window/ }).click();
+    const activeTab = page.getByTestId('tab-0');
+    // Default active tab font style is bold.
+    expect(await activeTab.evaluate((el) => getComputedStyle(el).fontWeight)).toBe('700');
+    // Switch to italic → no longer bold, now italic.
+    await page.getByTestId('active-tab-font-style').click();
+    await page.getByRole('option', { name: 'italic', exact: true }).click();
+    expect(await activeTab.evaluate((el) => getComputedStyle(el).fontStyle)).toBe('italic');
+    expect(await activeTab.evaluate((el) => getComputedStyle(el).fontWeight)).toBe('400');
   });
 
   test('theme toggle switches dark/light mode', async ({ page }) => {

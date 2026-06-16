@@ -148,4 +148,29 @@ tab_activity_symbol \u2592
     expect(b.window.padding.left).toBe(12);
     expect(b.window.padding.top).toBe(12);
   });
+
+  it('maps and round-trips tab color + font-style customization', () => {
+    const input = [
+      'active_tab_foreground #1e1e2e',
+      'active_tab_background #89b4fa',
+      'inactive_tab_foreground #cdd6f4',
+      'inactive_tab_background #45475a',
+      'active_tab_font_style italic',
+    ].join('\n');
+    const a = parsedToConfig(parseKittyConf(input));
+    expect(a.tabBar.activeForeground).toBe('#1e1e2e');
+    expect(a.tabBar.activeBackground).toBe('#89b4fa');
+    expect(a.tabBar.inactiveForeground).toBe('#cdd6f4');
+    expect(a.tabBar.inactiveBackground).toBe('#45475a');
+    expect(a.tabBar.activeFontStyle).toBe('italic');
+
+    const out = configToConf(a);
+    expect(out).toMatch(/active_tab_background "?#89b4fa"?/);
+    expect(out).toContain('active_tab_font_style italic');
+
+    const b = parsedToConfig(parseKittyConf(out));
+    expect(b.tabBar.activeBackground).toBe(a.tabBar.activeBackground);
+    expect(b.tabBar.inactiveForeground).toBe(a.tabBar.inactiveForeground);
+    expect(b.tabBar.activeFontStyle).toBe('italic');
+  });
 });

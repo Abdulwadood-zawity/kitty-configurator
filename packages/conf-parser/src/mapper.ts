@@ -47,6 +47,11 @@ const KNOWN_TOP_LEVEL_KEYS = new Set([
   'tab_title_max_length',
   'enable_audio_bell',
   'tab_title_template',
+  'active_tab_foreground',
+  'active_tab_background',
+  'inactive_tab_foreground',
+  'inactive_tab_background',
+  'active_tab_font_style',
   'enabled_layouts',
   'active_layout_alias',
   'hide_mouse_when_typing',
@@ -207,6 +212,18 @@ export function parsedToConfig(parsed: ParsedConf): KittyConfig {
   if (bell === 'no') cfg.tabBar.activityBell = false;
   const ttt = getFirstValueJoined(parsed, 'tab_title_template');
   if (ttt) cfg.tabBar.titleTemplate = ttt;
+  const atf = getFirstValue(parsed, 'active_tab_foreground');
+  if (isHex(atf)) cfg.tabBar.activeForeground = atf;
+  const atb = getFirstValue(parsed, 'active_tab_background');
+  if (isHex(atb)) cfg.tabBar.activeBackground = atb;
+  const itf = getFirstValue(parsed, 'inactive_tab_foreground');
+  if (isHex(itf)) cfg.tabBar.inactiveForeground = itf;
+  const itb = getFirstValue(parsed, 'inactive_tab_background');
+  if (isHex(itb)) cfg.tabBar.inactiveBackground = itb;
+  const atfs = getFirstValue(parsed, 'active_tab_font_style');
+  if (atfs === 'normal' || atfs === 'bold' || atfs === 'italic' || atfs === 'bold-italic') {
+    cfg.tabBar.activeFontStyle = atfs;
+  }
 
   const layouts = getEntries(parsed, 'enabled_layouts');
   if (layouts.length > 0) {
@@ -349,6 +366,21 @@ export function configToConf(config: KittyConfig): string {
   }
   if (config.tabBar.titleTemplate) {
     lines.push({ kind: 'entry', key: 'tab_title_template', values: [quoteIfNeeded(config.tabBar.titleTemplate)] });
+  }
+  if (config.tabBar.activeForeground) {
+    lines.push({ kind: 'entry', key: 'active_tab_foreground', values: [config.tabBar.activeForeground] });
+  }
+  if (config.tabBar.activeBackground) {
+    lines.push({ kind: 'entry', key: 'active_tab_background', values: [config.tabBar.activeBackground] });
+  }
+  if (config.tabBar.inactiveForeground) {
+    lines.push({ kind: 'entry', key: 'inactive_tab_foreground', values: [config.tabBar.inactiveForeground] });
+  }
+  if (config.tabBar.inactiveBackground) {
+    lines.push({ kind: 'entry', key: 'inactive_tab_background', values: [config.tabBar.inactiveBackground] });
+  }
+  if (config.tabBar.activeFontStyle !== 'bold') {
+    lines.push({ kind: 'entry', key: 'active_tab_font_style', values: [config.tabBar.activeFontStyle] });
   }
   lines.push({ kind: 'blank' });
 

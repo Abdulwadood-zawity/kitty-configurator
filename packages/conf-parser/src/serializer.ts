@@ -1,7 +1,7 @@
 import type { ConfLine, ParsedConf } from './parser';
 
 function quote(s: string): string {
-  if (s.length === 0) return '""';
+  if (s == null || s.length === 0) return '""';
   if (/[\s#"\\]/u.test(s)) {
     return `"${s.replace(/\\/gu, '\\\\').replace(/"/gu, '\\"')}"`;
   }

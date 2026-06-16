@@ -82,13 +82,18 @@ export function ApplyBar() {
     <>
       <div
         data-testid="apply-bar"
-        className="sticky bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        className="shrink-0 border-t bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
-        <div className="container flex h-16 items-center justify-end gap-3">
-          <Button variant="outline" onClick={handleExport} data-testid="export-button">
-            <Download className="h-4 w-4 mr-2" /> Export kitty.conf
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            data-testid="export-button"
+            className="flex-1"
+          >
+            <Download className="h-4 w-4 mr-2" /> Export
           </Button>
-          <Button onClick={() => setOpen(true)} data-testid="apply-button">
+          <Button onClick={() => setOpen(true)} data-testid="apply-button" className="flex-1">
             <Send className="h-4 w-4 mr-2" /> Apply to my Kitty
           </Button>
         </div>

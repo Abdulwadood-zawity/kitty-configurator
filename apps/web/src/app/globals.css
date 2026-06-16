@@ -53,3 +53,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* When the terminal preview is shown inside a translucent / blurred window,
+   force xterm's own surfaces transparent so the glass + wallpaper behind the
+   window show through the text area (matching kitty's background_opacity). */
+.xterm-transparent .xterm,
+.xterm-transparent .xterm .xterm-viewport,
+.xterm-transparent .xterm .xterm-screen,
+.xterm-transparent .xterm-viewport {
+  background-color: transparent !important;
+}
+
+/* Hide the scrollbar track so it doesn't show as an opaque strip over glass. */
+.xterm-transparent .xterm .xterm-viewport::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}

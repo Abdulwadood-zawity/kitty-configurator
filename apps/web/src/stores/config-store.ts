@@ -105,7 +105,21 @@ export const useConfigStore = create<State>()(
     }),
     {
       name: 'kitty-configurator-config',
-      version: 1,
+      version: 2,
+      // Older persisted configs may be missing newer fields (e.g. tab colors and
+      // active_tab_font_style). Merge them with the defaults so required fields
+      // are always present.
+      migrate: (persisted) => {
+        const state = persisted as { config?: Partial<KittyConfig> } | undefined;
+        if (!state?.config) return { config: structuredClone(DEFAULT_CONFIG) } as State;
+        return {
+          config: {
+            ...structuredClone(DEFAULT_CONFIG),
+            ...state.config,
+            tabBar: { ...DEFAULT_CONFIG.tabBar, ...state.config.tabBar },
+          },
+        } as State;
+      },
     },
   ),
 );

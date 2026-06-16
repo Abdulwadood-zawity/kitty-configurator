@@ -31,6 +31,14 @@ describe('config mapping', () => {
     const text = configToConf(DEFAULT_CONFIG);
     expect(text).toContain('foreground');
     expect(text).toContain('background');
+    expect(text).toContain('foreground #cdd6f4');
+    expect(text).not.toContain('foreground "#cdd6f4"');
+    expect(text).toContain('font_family "JetBrains Mono"');
+    expect(text).not.toContain('font_family "\\"JetBrains Mono\\""');
+    expect(text).toContain('line_height 1.0');
+    expect(text).not.toContain('# Mouse\n\n');
+    expect(text).not.toContain('# Scrollback\n\n');
+    expect(text).not.toContain('# Performance\n\n');
     // Should be re-parseable
     const parsed = parseKittyConf(text);
     expect(parsed.lines.some((l) => l.kind === 'entry' && l.key === 'foreground')).toBe(true);

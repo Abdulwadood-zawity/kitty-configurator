@@ -101,14 +101,6 @@ function getFirstValueJoined(parsed: ParsedConf, key: string): string | undefine
   return entries[0].map(unquote).join(' ');
 }
 
-function quoteIfNeeded(s: string): string {
-  if (s.length === 0) return '""';
-  if (/[\s#"]/u.test(s)) {
-    return `"${s.replace(/\\/gu, '\\\\').replace(/"/gu, '\\"')}"`;
-  }
-  return s;
-}
-
 function isHex(s: string | undefined): s is string {
   return !!s && /^#[0-9a-fA-F]{6}$/u.test(s);
 }
@@ -314,9 +306,9 @@ export function configToConf(config: KittyConfig): string {
   lines.push({ kind: 'blank' });
 
   lines.push({ kind: 'comment', text: 'Font' });
-  lines.push({ kind: 'entry', key: 'font_family', values: [quoteIfNeeded(config.font.family)] });
+  lines.push({ kind: 'entry', key: 'font_family', values: [config.font.family] });
   lines.push({ kind: 'entry', key: 'font_size', values: [String(config.font.size)] });
-  lines.push({ kind: 'entry', key: 'line_height', values: [String(config.font.lineHeight)] });
+  lines.push({ kind: 'entry', key: 'line_height', values: [config.font.lineHeight % 1 === 0 ? config.font.lineHeight.toFixed(1) : String(config.font.lineHeight)] });
   if (config.font.letterSpacing !== 0) {
     lines.push({ kind: 'entry', key: 'letter_spacing', values: [String(config.font.letterSpacing)] });
   }
@@ -324,13 +316,13 @@ export function configToConf(config: KittyConfig): string {
     lines.push({ kind: 'entry', key: 'disable_ligatures', values: ['yes'] });
   }
   if (config.font.boldFontFamily) {
-    lines.push({ kind: 'entry', key: 'bold_font_family', values: [quoteIfNeeded(config.font.boldFontFamily)] });
+    lines.push({ kind: 'entry', key: 'bold_font_family', values: [config.font.boldFontFamily] });
   }
   if (config.font.italicFontFamily) {
-    lines.push({ kind: 'entry', key: 'italic_font_family', values: [quoteIfNeeded(config.font.italicFontFamily)] });
+    lines.push({ kind: 'entry', key: 'italic_font_family', values: [config.font.italicFontFamily] });
   }
   if (config.font.boldItalicFontFamily) {
-    lines.push({ kind: 'entry', key: 'bold_italic_font_family', values: [quoteIfNeeded(config.font.boldItalicFontFamily)] });
+    lines.push({ kind: 'entry', key: 'bold_italic_font_family', values: [config.font.boldItalicFontFamily] });
   }
   lines.push({ kind: 'blank' });
 
@@ -353,7 +345,7 @@ export function configToConf(config: KittyConfig): string {
     lines.push({ kind: 'entry', key: 'confirm_os_window_close', values: ['no'] });
   }
   if (config.window.windowLogoPath) {
-    lines.push({ kind: 'entry', key: 'window_logo_path', values: [quoteIfNeeded(config.window.windowLogoPath)] });
+    lines.push({ kind: 'entry', key: 'window_logo_path', values: [config.window.windowLogoPath] });
   }
   lines.push({ kind: 'blank' });
 
@@ -365,7 +357,7 @@ export function configToConf(config: KittyConfig): string {
     lines.push({ kind: 'entry', key: 'enable_audio_bell', values: ['no'] });
   }
   if (config.tabBar.titleTemplate) {
-    lines.push({ kind: 'entry', key: 'tab_title_template', values: [quoteIfNeeded(config.tabBar.titleTemplate)] });
+    lines.push({ kind: 'entry', key: 'tab_title_template', values: [config.tabBar.titleTemplate] });
   }
   if (config.tabBar.activeForeground) {
     lines.push({ kind: 'entry', key: 'active_tab_foreground', values: [config.tabBar.activeForeground] });
@@ -391,47 +383,59 @@ export function configToConf(config: KittyConfig): string {
   }
   lines.push({ kind: 'blank' });
 
-  lines.push({ kind: 'comment', text: 'Mouse' });
+  const mouseEntries: ConfLine[] = [];
   if (!config.mouse.hideMouseWhenTyping) {
-    lines.push({ kind: 'entry', key: 'hide_mouse_when_typing', values: ['no'] });
+    mouseEntries.push({ kind: 'entry', key: 'hide_mouse_when_typing', values: ['no'] });
   }
   if (config.mouse.mouseHideWait !== 3) {
-    lines.push({ kind: 'entry', key: 'mouse_hide_wait', values: [String(config.mouse.mouseHideWait)] });
+    mouseEntries.push({ kind: 'entry', key: 'mouse_hide_wait', values: [String(config.mouse.mouseHideWait)] });
   }
   if (config.mouse.focusFollowsMouse) {
-    lines.push({ kind: 'entry', key: 'focus_follows_mouse', values: ['yes'] });
+    mouseEntries.push({ kind: 'entry', key: 'focus_follows_mouse', values: ['yes'] });
   }
   if (config.mouse.pointerShapeWhenGrabbed !== 'arrow') {
-    lines.push({ kind: 'entry', key: 'pointer_shape_when_grabbed', values: [config.mouse.pointerShapeWhenGrabbed] });
+    mouseEntries.push({ kind: 'entry', key: 'pointer_shape_when_grabbed', values: [config.mouse.pointerShapeWhenGrabbed] });
   }
   if (config.mouse.defaultPointerShape !== 'arrow') {
-    lines.push({ kind: 'entry', key: 'default_pointer_shape', values: [config.mouse.defaultPointerShape] });
+    mouseEntries.push({ kind: 'entry', key: 'default_pointer_shape', values: [config.mouse.defaultPointerShape] });
   }
-  lines.push({ kind: 'blank' });
+  if (mouseEntries.length > 0) {
+    lines.push({ kind: 'comment', text: 'Mouse' });
+    lines.push(...mouseEntries);
+    lines.push({ kind: 'blank' });
+  }
 
-  lines.push({ kind: 'comment', text: 'Scrollback' });
+  const scrollbackEntries: ConfLine[] = [];
   if (config.scrollback.lines !== 2000) {
-    lines.push({ kind: 'entry', key: 'scrollback_lines', values: [String(config.scrollback.lines)] });
+    scrollbackEntries.push({ kind: 'entry', key: 'scrollback_lines', values: [String(config.scrollback.lines)] });
   }
   if (config.scrollback.pager) {
-    lines.push({ kind: 'entry', key: 'scrollback_pager', values: [quoteIfNeeded(config.scrollback.pager)] });
+    scrollbackEntries.push({ kind: 'entry', key: 'scrollback_pager', values: [config.scrollback.pager] });
   }
   if (config.scrollback.fillEnum !== 'default') {
-    lines.push({ kind: 'entry', key: 'scrollback_fill', values: [config.scrollback.fillEnum] });
+    scrollbackEntries.push({ kind: 'entry', key: 'scrollback_fill', values: [config.scrollback.fillEnum] });
   }
   if (config.scrollback.inSecondaryScreen) {
-    lines.push({ kind: 'entry', key: 'scrollback_in_secondary_screen', values: ['yes'] });
+    scrollbackEntries.push({ kind: 'entry', key: 'scrollback_in_secondary_screen', values: ['yes'] });
   }
-  lines.push({ kind: 'blank' });
+  if (scrollbackEntries.length > 0) {
+    lines.push({ kind: 'comment', text: 'Scrollback' });
+    lines.push(...scrollbackEntries);
+    lines.push({ kind: 'blank' });
+  }
 
-  lines.push({ kind: 'comment', text: 'Performance' });
+  const perfEntries: ConfLine[] = [];
   if (config.performance.repaintDelay !== 10) {
-    lines.push({ kind: 'entry', key: 'repaint_delay', values: [String(config.performance.repaintDelay)] });
+    perfEntries.push({ kind: 'entry', key: 'repaint_delay', values: [String(config.performance.repaintDelay)] });
   }
   if (!config.performance.syncToMonitor) {
-    lines.push({ kind: 'entry', key: 'sync_to_monitor', values: ['no'] });
+    perfEntries.push({ kind: 'entry', key: 'sync_to_monitor', values: ['no'] });
   }
-  lines.push({ kind: 'blank' });
+  if (perfEntries.length > 0) {
+    lines.push({ kind: 'comment', text: 'Performance' });
+    lines.push(...perfEntries);
+    lines.push({ kind: 'blank' });
+  }
 
   if (config.keybindings.length > 0) {
     lines.push({ kind: 'comment', text: 'Keybindings' });

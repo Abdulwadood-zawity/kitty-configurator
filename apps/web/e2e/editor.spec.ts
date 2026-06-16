@@ -73,6 +73,17 @@ test.describe('Kitty Configurator', () => {
     await page.getByTestId('export-button').click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe('kitty.conf');
+    const stream = await download.createReadStream();
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream!) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    const text = Buffer.concat(chunks).toString('utf8');
+    expect(text).toContain('foreground #cdd6f4');
+    expect(text).not.toContain('foreground "#cdd6f4"');
+    expect(text).toContain('font_family "JetBrains Mono"');
+    expect(text).not.toContain('font_family "\\"JetBrains Mono\\""');
+    expect(text).toContain('line_height 1.0');
   });
 
   test('layout mode renders multiple terminal panes', async ({ page }) => {
